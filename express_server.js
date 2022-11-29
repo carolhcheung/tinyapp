@@ -2,26 +2,32 @@ const express = require("express");
 const app = express();
 const PORT = 8080;
 
+//req.params.id = existing shortID
+//req.body.longURL = new longURL from entry
+//<%= id %> = shortID in ejs files
+
+//use EJS as templating engine
 app.set("view engine", "ejs");
 
 const urlDatabase = {
-  "b2xVn2": "http://www.lighthouselabs.ca",
-  "9sm5xK": "http://www.google.com"
+  b2xVn2: "http://www.lighthouselabs.ca",
+  "9sm5xK": "http://www.google.com",
 };
 
+//before routes, convert request body from Buffer into readable string
 app.use(express.urlencoded({ extended: true }));
 
-app.get("/", (req, res) => {
-  res.send("Hello!");
-});
+// app.get("/", (req, res) => {
+//   res.send("Hello!");
+// });
 
-app.get("/urls.json", (req, res) => {
-  res.json(urlDatabase);
-});
+// app.get("/urls.json", (req, res) => {
+//   res.json(urlDatabase);
+// });
 
-app.get("/hello", (req, res) => {
-  res.send("<html><body>Hello <b>World</b></body></html>\n");
-});
+// app.get("/hello", (req, res) => {
+//   res.send("<html><body>Hello <b>World</b></body></html>\n");
+// });
 
 app.get("/urls", (req, res) => {
   const templateVars = { urls: urlDatabase };
@@ -29,7 +35,8 @@ app.get("/urls", (req, res) => {
 });
 
 //Generates random id for shortURL
-const characters = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789';
+const characters =
+  "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789";
 function generateRandomString() {
   let result = "";
   const length = 6;
@@ -49,29 +56,45 @@ app.get("/urls/new", (req, res) => {
 app.post("/urls", (req, res) => {
   console.log(req.body); // Log the POST request body to the console
 
-  const shortId = generateRandomString()
+  const shortId = generateRandomString();
 
-  urlDatabase[shortId] = req.body.longURL
-  
-  res.redirect(`/urls/${shortId}`); 
+  urlDatabase[shortId] = req.body.longURL;
+
+  res.redirect(`/urls/${shortId}`);
 });
 
+// edit shortURL with new longURL
+app.post("/urls/:id", (req, res) => {
+  urlDatabase[req.params.id] = req.body.longURL;
+  res.redirect("/urls");
+});
+
+//post to delete urls
 app.post("/urls/:id/delete", (req, res) => {
   delete urlDatabase[req.params.id];
-  res.redirect("/urls"); 
-})
+  res.redirect("/urls");
+});
 
+//shows created/existing urls
 app.get("/urls/:id", (req, res) => {
-  const templateVars = { id: req.params.id, longURL: urlDatabase[req.params.id] };
+  const templateVars = {
+    id: req.params.id,
+    longURL: urlDatabase[req.params.id],
+  };
   res.render("urls_show", templateVars);
 });
 
+//post to redirect to longURL after creating new shortID and longURL
 app.get("/u/:id", (req, res) => {
-  const longURL = urlDatabase[req.params.id]
+  const longURL = urlDatabase[req.params.id];
   res.redirect(longURL);
 });
-
 
 app.listen(PORT, () => {
   console.log(`Example app listening on port ${PORT}!`);
 });
+
+// //404 page: use this function for every request when there's no match found
+//app.use((req, res) => {
+//   res.status(404).render('404');
+//});
