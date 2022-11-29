@@ -1,10 +1,15 @@
 const express = require("express");
+const cookieParser = require('cookie-parser');
 const app = express();
 const PORT = 8080;
+
 
 //req.params.id = existing shortID
 //req.body.longURL = new longURL from entry
 //<%= id %> = shortID in ejs files
+//req.body.username = username
+
+app.use(cookieParser())
 
 //use EJS as templating engine
 app.set("view engine", "ejs");
@@ -88,6 +93,12 @@ app.get("/urls/:id", (req, res) => {
 app.get("/u/:id", (req, res) => {
   const longURL = urlDatabase[req.params.id];
   res.redirect(longURL);
+});
+
+app.post("/login", (req, res) => {
+  console.log(req.body.username); // Log the POST request body to the console
+  res.cookie("username", req.body.username)
+  res.redirect('/urls')
 });
 
 app.listen(PORT, () => {
