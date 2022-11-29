@@ -13,7 +13,7 @@
 
   
   <body>
-    <%- include('partials/_header') %>
+    <%- include("partials/_header") %>
     <div class="card text-center">
       <div class="card-header"></div>
       <div class="card-body">
@@ -22,9 +22,20 @@
           Short URL ID: <a href="/u/<%= id %>"><%= id %></a>
         </p>
       </div>
-      <div class="card-footer text-muted"></div>
+      <div class="card-footer text-muted" class="text-center">
+        <h3>Edit</h3>
+        <form action="/urls/" method="POST">
+          <label for="longURL">New URL:</label>
+          <input
+          type="text"
+          name="longURL"
+          placeholder="http://"
+          style="width: 300px; margin: 1em"
+        /><button type="submit" class="btn btn-primary">Submit</button>
+      </div>
     </div>
     <!-- Bootstrap JS -->
+    
     <script
       src="https://code.jquery.com/jquery-3.3.1.slim.min.js"
       integrity="sha384-q8i/X+965DzO0rT7abK41JStQIAqVgRVzpbzo5smXKp4YfRvH+8abtTE1Pi6jizo"
