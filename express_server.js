@@ -111,10 +111,18 @@ app.get("/u/:id", (req, res) => {
   res.redirect(longURL);
 });
 
+//setup login route
+app.get("/login", (req, res) => {
+  const templateVars = {
+    user: userDatabase[req.cookies.user_id],
+  };
+  res.render("login", templateVars);
+});
+
 app.post("/login", (req, res) => {
   console.log(req.body.user_id); // Log the POST request body to the console
-  res.cookie("user_id", req.body.user_id);
-  res.redirect("/urls");
+  // res.cookie("user_id", req.body.user_id);
+  res.redirect("/login");
 });
 
 //setup register route
