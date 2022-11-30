@@ -89,7 +89,9 @@ app.post("/urls", (req, res) => {
   const shortId = generateRandomString();
 
   urlDatabase[shortId] = req.body.longURL;
-
+  if (!req.cookies.user_id) {
+    return res.send('Please login to create shortURL.')
+  }
   res.redirect(`/urls/${shortId}`);
 });
 
@@ -122,13 +124,12 @@ app.get("/u/:id", (req, res) => {
 });
 
 //setup login route
-app.get("/login", (req, res) => {
-  const userCookie = req.cookies.user_id; 
+app.get("/login", (req, res) => { 
   const templateVars = {
     user: userDatabase[req.cookies.user_id],
   };
 //if user logged in redirect to urls when trying to access /login
-  if (userCookie) {
+  if (req.cookies.user_id) {
   return res.redirect('urls');
   }  
 
@@ -153,12 +154,11 @@ app.post("/login", (req, res) => {
 
 //setup register route
 app.get("/register", (req, res) => {
-  const userCookie = req.cookies.user_id; 
-  const templateVars = {
+   const templateVars = {
     user: userDatabase[req.cookies.user_id],
   };
 //if user logged in redirect to urls when trying to access /register
-  if (userCookie) {
+  if (req.cookies.user_id) {
     return res.redirect('urls');
   }
 
