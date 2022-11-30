@@ -16,7 +16,6 @@ const getUserByEmail = (email) => {
 //req.params.id = existing shortID
 //req.body.longURL = new longURL from entry
 //<%= id %> = shortID in ejs files
-//req.body.username = username
 
 app.use(cookieParser());
 
@@ -177,7 +176,7 @@ app.post("/register", (req, res) => {
 
 app.post("/logout", (req, res) => {
   res.clearCookie("user_id", req.body.user_id);
-  res.redirect("/urls");
+  res.redirect("/login");
 });
 
 app.listen(PORT, () => {
