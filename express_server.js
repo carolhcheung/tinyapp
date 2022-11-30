@@ -3,6 +3,16 @@ const cookieParser = require("cookie-parser");
 const app = express();
 const PORT = 8080;
 
+const getUserByEmail = (email) => {
+  let result = null;
+  for (let ids in userDatabase) {
+    if (email === userDatabase[ids].email) {
+      result = userDatabase[ids];
+    }
+  }
+  return result;
+};
+
 //req.params.id = existing shortID
 //req.body.longURL = new longURL from entry
 //<%= id %> = shortID in ejs files
@@ -34,9 +44,10 @@ app.get("/hello", (req, res) => {
 });
 
 app.get("/urls", (req, res) => {
-  const templateVars = { 
-    urls: urlDatabase, 
-    user: userDatabase[req.cookies.user_id] };
+  const templateVars = {
+    urls: urlDatabase,
+    user: userDatabase[req.cookies.user_id],
+  };
   res.render("urls_index", templateVars);
 });
 
@@ -56,8 +67,9 @@ function generateRandomString() {
 }
 
 app.get("/urls/new", (req, res) => {
-  const templateVars = {  
-    user: userDatabase[req.cookies.user_id] };
+  const templateVars = {
+    user: userDatabase[req.cookies.user_id],
+  };
   res.render("urls_new", templateVars);
 });
 
@@ -88,7 +100,7 @@ app.get("/urls/:id", (req, res) => {
   const templateVars = {
     id: req.params.id,
     longURL: urlDatabase[req.params.id],
-    user: userDatabase[req.cookies.user_id] 
+    user: userDatabase[req.cookies.user_id],
   };
   res.render("urls_show", templateVars);
 });
@@ -107,8 +119,9 @@ app.post("/login", (req, res) => {
 
 //setup register route
 app.get("/register", (req, res) => {
-  const templateVars = {  
-    user: userDatabase[req.cookies.user_id] };
+  const templateVars = {
+    user: userDatabase[req.cookies.user_id],
+  };
   res.render("register", templateVars);
 });
 
@@ -118,14 +131,23 @@ app.post("/register", (req, res) => {
   const userId = generateRandomString();
   const email = req.body.email;
   const password = req.body.password;
+  const checkEmail = getUserByEmail(email);
   console.log(req.body); // Log the POST request body to the console
-  
-  userDatabase[userId] = { id: userId, email: email, password: password };
-  
-  res.cookie("user_id", userId);
-  console.log(userDatabase);
-  
-  res.redirect("/urls");
+
+  if (email === "" || password === "" || checkEmail !== null) {
+    res
+      .status(400)
+      .send(
+        "Error: Please enter email and password to register or email already exists"
+      );
+  } else {
+    userDatabase[userId] = { id: userId, email: email, password: password };
+
+    res.cookie("user_id", userId);
+    console.log(userDatabase);
+
+    res.redirect("/urls");
+  }
 });
 
 app.post("/logout", (req, res) => {
