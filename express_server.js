@@ -134,20 +134,20 @@ app.post("/register", (req, res) => {
   const checkEmail = getUserByEmail(email);
   console.log(req.body); // Log the POST request body to the console
 
-  if (email === "" || password === "" || checkEmail !== null) {
-    res
+  if (email === "" || password === "") {
+    return res
       .status(400)
-      .send(
-        "Error: Please enter email and password to register or email already exists"
-      );
-  } else {
-    userDatabase[userId] = { id: userId, email: email, password: password };
-
-    res.cookie("user_id", userId);
-    console.log(userDatabase);
-
-    res.redirect("/urls");
+      .send("Error: Please enter email and password to register.");
   }
+  if (checkEmail !== null) {
+    return res.status(400).send("Error: Email already exists.");
+  }
+  userDatabase[userId] = { id: userId, email: email, password: password };
+
+  res.cookie("user_id", userId);
+  console.log(userDatabase);
+
+  res.redirect("/urls");
 });
 
 app.post("/logout", (req, res) => {
