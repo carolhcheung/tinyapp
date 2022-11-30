@@ -79,7 +79,7 @@ app.get("/urls/new", (req, res) => {
   };
   res.render("urls_new", templateVars);
 });
-
+//generate short ID for longURL
 app.post("/urls", (req, res) => {
   console.log(req.body); // Log the POST request body to the console
 
@@ -120,21 +120,27 @@ app.get("/u/:id", (req, res) => {
 
 //setup login route
 app.get("/login", (req, res) => {
+  const userCookie = req.cookies.user_id; 
   const templateVars = {
     user: userDatabase[req.cookies.user_id],
   };
+//if user logged in redirect to urls when trying to access /login
+  if (userCookie) {
+  return res.redirect('urls');
+  }  
+
   res.render("login", templateVars);
 });
 
 app.post("/login", (req, res) => {
   const email = req.body.email; 
   const password = req.body.password;
-  
+//checks for email match
   let user = getUserByEmail(email)
   if (!user) {
     return res.status(403).send('Error: Email is incorrect, please try again!')
   }
-
+//checks for password match
   if (user.password !== password) {
     return res.status(403).send('Error: Password is incorrect, please try again!')
   }
@@ -144,9 +150,15 @@ app.post("/login", (req, res) => {
 
 //setup register route
 app.get("/register", (req, res) => {
+  const userCookie = req.cookies.user_id; 
   const templateVars = {
     user: userDatabase[req.cookies.user_id],
   };
+//if user logged in redirect to urls when trying to access /register
+  if (userCookie) {
+    return res.redirect('urls');
+  }
+
   res.render("register", templateVars);
 });
 
@@ -157,12 +169,13 @@ app.post("/register", (req, res) => {
   const checkEmail = getUserByEmail(email);
   console.log(req.body); // Log the POST request body to the console
 
-//check for empty email or password and check if user already exists
+//check for empty email or password for registration
   if (!email || !password) {
     return res
       .status(400)
       .send("Error: Please enter email and password to register.");
   }
+ //check if email exists already for registration 
   if (checkEmail !== null) {
     return res.status(400).send("Error: Email already exists, please use a different email.");
   }
