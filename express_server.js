@@ -28,6 +28,14 @@ const urlDatabase = {
   "9sm5xK": "http://www.google.com",
 };
 
+const userDatabase = {
+  abc: {
+    id: 'abc',
+    email: 'a@a.com',
+    password: '1234'
+  }
+};
+
 //before routes, convert request body from Buffer into readable string
 app.use(express.urlencoded({ extended: true }));
 
@@ -120,8 +128,18 @@ app.get("/login", (req, res) => {
 });
 
 app.post("/login", (req, res) => {
-  console.log(req.body.user_id); // Log the POST request body to the console
-  // res.cookie("user_id", req.body.user_id);
+  const email = req.body.email; 
+  const password = req.body.password;
+  
+  let user = getUserByEmail(email)
+  if (!user) {
+    return res.status(403).send('Error: Email is incorrect, please try again!')
+  }
+
+  if (user.password !== password) {
+    return res.status(403).send('Error: Password is incorrect, please try again!')
+  }
+  res.cookie('user_id', user.id)  
   res.redirect("/login");
 });
 
@@ -133,8 +151,6 @@ app.get("/register", (req, res) => {
   res.render("register", templateVars);
 });
 
-const userDatabase = {};
-
 app.post("/register", (req, res) => {
   const userId = generateRandomString();
   const email = req.body.email;
@@ -142,13 +158,14 @@ app.post("/register", (req, res) => {
   const checkEmail = getUserByEmail(email);
   console.log(req.body); // Log the POST request body to the console
 
-  if (email === "" || password === "") {
+//check for empty email or password and check if user already exists
+  if (!email || !password) {
     return res
       .status(400)
       .send("Error: Please enter email and password to register.");
   }
   if (checkEmail !== null) {
-    return res.status(400).send("Error: Email already exists.");
+    return res.status(400).send("Error: Email already exists, please use a different email.");
   }
   userDatabase[userId] = { id: userId, email: email, password: password };
 
