@@ -34,7 +34,9 @@ app.get("/hello", (req, res) => {
 });
 
 app.get("/urls", (req, res) => {
-  const templateVars = { urls: urlDatabase, username: req.cookies["username"] };
+  const templateVars = { 
+    urls: urlDatabase, 
+    user: userDatabase[req.cookies.user_id] };
   res.render("urls_index", templateVars);
 });
 
@@ -53,13 +55,9 @@ function generateRandomString() {
   return result;
 }
 
-app.get("/register", (req, res) => {
-  const templateVars = { username: req.cookies["username"] };
-  res.render("register", templateVars);
-});
-
 app.get("/urls/new", (req, res) => {
-  const templateVars = { username: req.cookies["username"] };
+  const templateVars = {  
+    user: userDatabase[req.cookies.user_id] };
   res.render("urls_new", templateVars);
 });
 
@@ -90,7 +88,7 @@ app.get("/urls/:id", (req, res) => {
   const templateVars = {
     id: req.params.id,
     longURL: urlDatabase[req.params.id],
-    username: req.cookies["username"],
+    user: userDatabase[req.cookies.user_id] 
   };
   res.render("urls_show", templateVars);
 });
@@ -102,13 +100,36 @@ app.get("/u/:id", (req, res) => {
 });
 
 app.post("/login", (req, res) => {
-  console.log(req.body.username); // Log the POST request body to the console
-  res.cookie("username", req.body.username);
+  console.log(req.body.user_id); // Log the POST request body to the console
+  res.cookie("user_id", req.body.user_id);
+  res.redirect("/urls");
+});
+
+//setup register route
+app.get("/register", (req, res) => {
+  const templateVars = {  
+    user: userDatabase[req.cookies.user_id] };
+  res.render("register", templateVars);
+});
+
+const userDatabase = {};
+
+app.post("/register", (req, res) => {
+  const userId = generateRandomString();
+  const email = req.body.email;
+  const password = req.body.password;
+  console.log(req.body); // Log the POST request body to the console
+  
+  userDatabase[userId] = { id: userId, email: email, password: password };
+  
+  res.cookie("user_id", userId);
+  console.log(userDatabase);
+  
   res.redirect("/urls");
 });
 
 app.post("/logout", (req, res) => {
-  res.clearCookie("username", req.body.username);
+  res.clearCookie("user_id", req.body.user_id);
   res.redirect("/urls");
 });
 
