@@ -3,6 +3,7 @@ const cookieParser = require("cookie-parser");
 const app = express();
 const PORT = 8080;
 
+//checks if email already exist in database if not will create new user in userDatabase hence an object
 const getUserByEmail = (email) => {
   let result = null;
   for (let ids in userDatabase) {
@@ -22,11 +23,13 @@ app.use(cookieParser());
 //use EJS as templating engine
 app.set("view engine", "ejs");
 
+//existing urlDatabase
 const urlDatabase = {
-  b2xVn2: "http://www.lighthouselabs.ca",
+  "b2xVn2": "http://www.lighthouselabs.ca",
   "9sm5xK": "http://www.google.com",
 };
 
+//test users
 const userDatabase = {
   abc: {
     id: 'abc',
@@ -50,6 +53,7 @@ app.get("/hello", (req, res) => {
   res.send("<html><body>Hello <b>World</b></body></html>\n");
 });
 
+//set route for urls
 app.get("/urls", (req, res) => {
   const templateVars = {
     urls: urlDatabase,
@@ -72,7 +76,7 @@ function generateRandomString() {
 
   return result;
 }
-
+//restrict access to newURL if not logged in and redirect to login page
 app.get("/urls/new", (req, res) => {
   const templateVars = {
     user: userDatabase[req.cookies.user_id],
@@ -82,6 +86,7 @@ app.get("/urls/new", (req, res) => {
   }
   res.render("urls_new", templateVars);
 });
+
 //generate short ID for longURL
 app.post("/urls", (req, res) => {
   console.log(req.body); // Log the POST request body to the console
@@ -107,7 +112,7 @@ app.post("/urls/:id/delete", (req, res) => {
   res.redirect("/urls");
 });
 
-//shows created/existing urls
+//shows shortIDs created/existing
 app.get("/urls/:id", (req, res) => {
   const templateVars = {
     id: req.params.id,
@@ -120,6 +125,10 @@ app.get("/urls/:id", (req, res) => {
 //post to redirect to longURL after creating new shortID and longURL
 app.get("/u/:id", (req, res) => {
   const longURL = urlDatabase[req.params.id];
+//if a short ID that doesn't exist is entered into browser
+  if (!urlDatabase[req.params.id]) {
+    return res.send("The short ID doesn't exist, please try again or create a new one")
+  }
   res.redirect(longURL);
 });
 
@@ -141,9 +150,11 @@ app.post("/login", (req, res) => {
   const password = req.body.password;
 //checks for email match
   let user = getUserByEmail(email)
+
   if (!user) {
     return res.status(403).send('Error: Email is incorrect, please try again!')
   }
+
 //checks for password match
   if (user.password !== password) {
     return res.status(403).send('Error: Password is incorrect, please try again!')
@@ -165,6 +176,7 @@ app.get("/register", (req, res) => {
   res.render("register", templateVars);
 });
 
+//register process
 app.post("/register", (req, res) => {
   const userId = generateRandomString();
   const email = req.body.email;
@@ -183,15 +195,15 @@ app.post("/register", (req, res) => {
     return res.status(400).send("Error: Email already exists, please use a different email.");
   }
   userDatabase[userId] = { id: userId, email: email, password: password };
-
+  //if not empty and email doesn't exist then create cookie for user 
   res.cookie("user_id", userId);
   console.log(userDatabase);
 
   res.redirect("/urls");
 });
-
+//clears the cookie for person who's logged
 app.post("/logout", (req, res) => {
-  res.clearCookie("user_id", req.body.user_id);
+  res.clearCookie("user_id");
   res.redirect("/login");
 });
 
