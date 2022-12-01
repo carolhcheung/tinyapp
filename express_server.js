@@ -1,5 +1,6 @@
 const express = require("express");
 const morgan = require("morgan");
+const bcrypt = require('bcrypt');
 const cookieParser = require("cookie-parser");
 const app = express();
 const PORT = 8080;
@@ -254,6 +255,7 @@ app.post("/register", (req, res) => {
   const userId = generateRandomString();
   const email = req.body.email;
   const password = req.body.password;
+  const hashedPassword = bcrypt.hashSync(password, 10);
   const checkEmail = getUserByEmail(email);
   console.log(req.body); // Log the POST request body to the console
 
