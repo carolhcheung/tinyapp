@@ -1,9 +1,9 @@
 const express = require("express");
 const morgan = require("morgan");
-const bcrypt = require('bcrypt');
+const bcrypt = require("bcryptjs");
 const cookieParser = require("cookie-parser");
 const app = express();
-const PORT = 8080;
+const PORT = 3000;
 
 //req.params.id = existing shortID
 //req.body.longURL = new longURL from entry
@@ -269,7 +269,7 @@ app.post("/register", (req, res) => {
   if (checkEmail !== null) {
     return res.status(401).send("Error: Email already exists, please use a different email.");
   }
-  userDatabase[userId] = { id: userId, email: email, password: password };
+  userDatabase[userId] = { id: userId, email: email, password: hashedPassword };
   //if not empty and email doesn't exist then create cookie for user 
   res.cookie("user_id", userId);
   console.log(userDatabase);
