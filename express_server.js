@@ -140,13 +140,13 @@ app.post("/urls", (req, res) => {
 // edit shortURL with new longURL
 app.post("/urls/:id", (req, res) => {
   if (!urlDatabase[req.params.id]) {
-    return res.status(404).send("The short ID doesn't exist, please try again or create a new one")
+    return res.status(404).send("The short ID you're trying to edit doesn't exist, please try again")
   }
   if (!req.cookies.user_id) {
     res.status(401).send("Please login to edit URL.")
   }
   if (userURL[req.params.id] === undefined) {
-    res.status(401).send("You are not authorized to access this URL.")
+    res.status(401).send("You are not authorized to edit this URL.")
   }
   urlDatabase[req.params.id] = { 
     longURL: req.body.longURL, 
@@ -157,6 +157,15 @@ app.post("/urls/:id", (req, res) => {
 
 //post to delete urls
 app.post("/urls/:id/delete", (req, res) => {
+  if (!urlDatabase[req.params.id]) {
+    return res.status(404).send("The short ID you're trying to delete doesn't exist, please try again")
+  }
+  if (!req.cookies.user_id) {
+    res.status(401).send("Please login to delete URL.")
+  }
+  if (userURL[req.params.id] === undefined) {
+    res.status(401).send("You are not authorized to delete this URL.")
+  }
   delete urlDatabase[req.params.id];
   res.redirect("/urls");
 });
