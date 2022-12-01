@@ -3,7 +3,7 @@ const morgan = require("morgan");
 const bcrypt = require("bcryptjs");
 const cookieParser = require("cookie-parser");
 const app = express();
-const PORT = 3000;
+const PORT = 8080;
 
 //req.params.id = existing shortID
 //req.body.longURL = new longURL from entry
@@ -24,14 +24,14 @@ const getUserByEmail = (email) => {
 };
 //filters urls for specific userid
 const urlsForUser = (id) => {
-  let obj = {}
+  let urlObj = {}
  
    for (let ids in urlDatabase){
  
      if (id === urlDatabase[ids].userID){
-       obj[ids] = urlDatabase[ids]
+       urlObj[ids] = urlDatabase[ids]
      }
-   } return obj;
+   } return urlObj;
  };
 
 app.use(cookieParser());
@@ -66,11 +66,11 @@ const urlDatabase = {
 
 //test users
 const userDatabase = {
-  abc: {
-    id: 'abc',
-    email: 'a@a.com',
-    password: '1234'
-  }
+  // abc: {
+  //   id: 'abc',
+  //   email: 'a@a.com',
+  //   password: '1234'
+  // }
 };
 
 //before routes, convert request body from Buffer into readable string
@@ -222,16 +222,20 @@ app.get("/login", (req, res) => {
 app.post("/login", (req, res) => {
   const email = req.body.email; 
   const password = req.body.password;
-//checks for email match
+  //checks for email match
   let user = getUserByEmail(email)
-
+  
   if (!user) {
     return res.status(401).send('Error: Email is incorrect, please try again!')
   }
-
-//checks for password match
-  if (user.password !== password) {
-    return res.status(401).send('Error: Password is incorrect, please try again!')
+  
+  //checks for password match
+  const hashedPassword = userDatabase[userId].password;
+  const matchPassword = bcrypt.compareSync(password, hashedPassword);
+  console.log(userDatabase[userId].password)
+  console.log(matchPassword)
+  if (!matchPassword) {
+    return res.status(403).send('Error: Password is incorrect, please try again!')
   }
   res.cookie('user_id', user.id)  
   res.redirect("/login");
