@@ -13,6 +13,17 @@ const getUserByEmail = (email) => {
   }
   return result;
 };
+//filters urls for specific userid
+const urlsForUser = (id) => {
+  let obj = {}
+ 
+   for (let ids in urlDatabase){
+ 
+     if (id === urlDatabase[ids].userID){
+       obj[ids] = urlDatabase[ids]
+     }
+   } return obj;
+ };
 
 //req.params.id = existing shortID
 //req.body.longURL = new longURL from entry
@@ -36,6 +47,14 @@ const urlDatabase = {
   i3BoGr: {
     longURL: "https://www.google.ca",
     userID: "aJ48lW",
+  },
+  i3BoG1: {
+    longURL: "https://www.telus.com",
+    userID: "abc",
+  },
+  i3BoG2: {
+    longURL: "https://www.amazon.jp",
+    userID: "abc",
   },
 };
 
@@ -65,8 +84,10 @@ app.get("/hello", (req, res) => {
 
 //set route for urls
 app.get("/urls", (req, res) => {
+  const userURL = urlsForUser(req.cookies.user_id);
+
   const templateVars = {
-    urls: urlDatabase,
+    urls: userURL,
     user: userDatabase[req.cookies.user_id],
   };
   res.render("urls_index", templateVars);
@@ -133,7 +154,7 @@ app.post("/urls/:id/delete", (req, res) => {
 app.get("/urls/:id", (req, res) => {
 
   if (!urlDatabase[req.params.id]) {
-    return res.send("The short ID doesn't exist, please try again or create a new one")
+    return res.status(404).send("The short ID doesn't exist, please try again or create a new one")
   }
   const templateVars = {
     id: req.params.id,
@@ -147,7 +168,7 @@ app.get("/urls/:id", (req, res) => {
 app.get("/u/:id", (req, res) => {
 
   if (!urlDatabase[req.params.id]) {
-    return res.send("The short ID doesn't exist, please try again or create a new one")
+    return res.status(404).send("The short ID doesn't exist, please try again or create a new one")
   }
   const longURL = urlDatabase[req.params.id].longURL;
 //if a short ID that doesn't exist is entered into browser
@@ -174,12 +195,12 @@ app.post("/login", (req, res) => {
   let user = getUserByEmail(email)
 
   if (!user) {
-    return res.status(403).send('Error: Email is incorrect, please try again!')
+    return res.status(401).send('Error: Email is incorrect, please try again!')
   }
 
 //checks for password match
   if (user.password !== password) {
-    return res.status(403).send('Error: Password is incorrect, please try again!')
+    return res.status(401).send('Error: Password is incorrect, please try again!')
   }
   res.cookie('user_id', user.id)  
   res.redirect("/login");
@@ -209,12 +230,12 @@ app.post("/register", (req, res) => {
 //check for empty email or password for registration
   if (!email || !password) {
     return res
-      .status(400)
+      .status(401)
       .send("Error: Please enter email and password to register.");
   }
  //check if email exists already for registration 
   if (checkEmail !== null) {
-    return res.status(400).send("Error: Email already exists, please use a different email.");
+    return res.status(401).send("Error: Email already exists, please use a different email.");
   }
   userDatabase[userId] = { id: userId, email: email, password: password };
   //if not empty and email doesn't exist then create cookie for user 
