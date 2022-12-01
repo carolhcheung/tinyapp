@@ -3,6 +3,13 @@ const cookieParser = require("cookie-parser");
 const app = express();
 const PORT = 8080;
 
+//req.params.id = existing shortID
+//req.body.longURL = new longURL from entry
+//<%= id %> = shortID in ejs files
+//req.cookies.user_id is the generated user id once they login successfully
+
+
+
 //checks if email already exist in database if not will create new user in userDatabase hence an object
 const getUserByEmail = (email) => {
   let result = null;
@@ -24,10 +31,6 @@ const urlsForUser = (id) => {
      }
    } return obj;
  };
-
-//req.params.id = existing shortID
-//req.body.longURL = new longURL from entry
-//<%= id %> = shortID in ejs files
 
 app.use(cookieParser());
 
@@ -82,12 +85,12 @@ app.get("/hello", (req, res) => {
   res.send("<html><body>Hello <b>World</b></body></html>\n");
 });
 
-//set route for urls
+//set route for urls, user can only access own urls
 app.get("/urls", (req, res) => {
-  const userURL = urlsForUser(req.cookies.user_id);
+  // const userURL = urlsForUser(req.cookies.user_id);
 
   const templateVars = {
-    urls: userURL,
+    urls: urlsForUser(req.cookies.user_id),
     user: userDatabase[req.cookies.user_id],
   };
   res.render("urls_index", templateVars);
@@ -136,7 +139,15 @@ app.post("/urls", (req, res) => {
 
 // edit shortURL with new longURL
 app.post("/urls/:id", (req, res) => {
-  
+  if (!urlDatabase[req.params.id]) {
+    return res.status(404).send("The short ID doesn't exist, please try again or create a new one")
+  }
+  if (!req.cookies.user_id) {
+    res.status(401).send("Please login to edit URL.")
+  }
+  if (userURL[req.params.id] === undefined) {
+    res.status(401).send("You are not authorized to access this URL.")
+  }
   urlDatabase[req.params.id] = { 
     longURL: req.body.longURL, 
     userID: req.cookies.user_id };
@@ -152,14 +163,22 @@ app.post("/urls/:id/delete", (req, res) => {
 
 //shows shortIDs created/existing
 app.get("/urls/:id", (req, res) => {
-
+  
   if (!urlDatabase[req.params.id]) {
     return res.status(404).send("The short ID doesn't exist, please try again or create a new one")
+  }
+  if (!req.cookies.user_id) {
+    res.status(401).send("Please login to use URL.")
+  }
+  const userURL = urlsForUser(req.cookies.user_id);
+  
+  if (userURL[req.params.id] === undefined) {
+    res.status(401).send("You are not authorized to access this URL.")
   }
   const templateVars = {
     id: req.params.id,
     longURL: urlDatabase[req.params.id].longURL,
-    user: userDatabase[req.cookies.user_id]
+    user: userDatabase[req.cookies.user_id],
   };
   res.render("urls_show", templateVars);
 });
