@@ -23,10 +23,20 @@ app.use(cookieParser());
 //use EJS as templating engine
 app.set("view engine", "ejs");
 
-//existing urlDatabase
+// //existing urlDatabase
+// const urlDatabase = {
+//   "b2xVn2": "http://www.lighthouselabs.ca",
+//   "9sm5xK": "http://www.google.com",
+// };
 const urlDatabase = {
-  "b2xVn2": "http://www.lighthouselabs.ca",
-  "9sm5xK": "http://www.google.com",
+  b6UTxQ: {
+    longURL: "https://www.tsn.ca",
+    userID: "aJ48lW",
+  },
+  i3BoGr: {
+    longURL: "https://www.google.ca",
+    userID: "aJ48lW",
+  },
 };
 
 //test users
@@ -82,7 +92,7 @@ app.get("/urls/new", (req, res) => {
     user: userDatabase[req.cookies.user_id],
   };
   if (!req.cookies.user_id) {
-    return res.redirect('login');
+    return res.redirect('/login');
   }
   res.render("urls_new", templateVars);
 });
@@ -93,7 +103,10 @@ app.post("/urls", (req, res) => {
 
   const shortId = generateRandomString();
 
-  urlDatabase[shortId] = req.body.longURL;
+  urlDatabase[shortId] = { 
+    longURL: req.body.longURL,
+    userID: req.cookies.user_id
+  }
   if (!req.cookies.user_id) {
     return res.send('Please login to create shortURL.')
   }
@@ -102,7 +115,11 @@ app.post("/urls", (req, res) => {
 
 // edit shortURL with new longURL
 app.post("/urls/:id", (req, res) => {
-  urlDatabase[req.params.id] = req.body.longURL;
+  
+  urlDatabase[req.params.id] = { 
+    longURL: req.body.longURL, 
+    userID: req.cookies.user_id };
+    
   res.redirect("/urls");
 });
 
@@ -114,21 +131,26 @@ app.post("/urls/:id/delete", (req, res) => {
 
 //shows shortIDs created/existing
 app.get("/urls/:id", (req, res) => {
+
+  if (!urlDatabase[req.params.id]) {
+    return res.send("The short ID doesn't exist, please try again or create a new one")
+  }
   const templateVars = {
     id: req.params.id,
-    longURL: urlDatabase[req.params.id],
-    user: userDatabase[req.cookies.user_id],
+    longURL: urlDatabase[req.params.id].longURL,
+    user: userDatabase[req.cookies.user_id]
   };
   res.render("urls_show", templateVars);
 });
 
 //post to redirect to longURL after creating new shortID and longURL
 app.get("/u/:id", (req, res) => {
-  const longURL = urlDatabase[req.params.id];
-//if a short ID that doesn't exist is entered into browser
+
   if (!urlDatabase[req.params.id]) {
     return res.send("The short ID doesn't exist, please try again or create a new one")
   }
+  const longURL = urlDatabase[req.params.id].longURL;
+//if a short ID that doesn't exist is entered into browser
   res.redirect(longURL);
 });
 
