@@ -1,4 +1,5 @@
 const express = require("express");
+const morgan = require("morgan");
 const cookieParser = require("cookie-parser");
 const app = express();
 const PORT = 8080;
@@ -33,6 +34,7 @@ const urlsForUser = (id) => {
  };
 
 app.use(cookieParser());
+app.use(morgan("dev"));
 
 //use EJS as templating engine
 app.set("view engine", "ejs");
