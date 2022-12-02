@@ -56,9 +56,9 @@ const urlDatabase = {
 
 const userDatabase = {
   abc: {
-    id: 'abc',
-    email: 'a@a.com',
-    password: '1234'
+    id: "abc",
+    email: "a@a.com",
+    password: "1234"
   }
 };
 
@@ -91,7 +91,7 @@ app.get("/urls/new", (req, res) => {
     user: userDatabase[req.session.user_id],
   };
   if (!req.session.user_id) {
-    return res.redirect('/login');
+    return res.redirect("/login");
   }
   res.render("urls_new", templateVars);
 });
@@ -107,7 +107,7 @@ app.post("/urls", (req, res) => {
     userID: req.session.user_id
   }
   if (!req.session.user_id) {
-    return res.send('Please login to create shortURL.')
+    return res.send("Please login to create shortURL.")
   }
   res.redirect(`/urls/${shortId}`);
 });
@@ -187,7 +187,7 @@ app.get("/login", (req, res) => {
 
 //if user logged in redirect to urls when trying to access /login
   if (req.session.user_id) {
-  return res.redirect('urls');
+  return res.redirect("urls");
   }  
 
   res.render("login", templateVars);
