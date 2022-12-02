@@ -1,31 +1,21 @@
 const express = require("express");
 const morgan = require("morgan");
 const bcrypt = require("bcryptjs");
-// const cookieParser = require("cookie-parser");
 const cookieSession = require('cookie-session');
 const app = express();
 const PORT = 8080;
 
-//req.params.id = existing shortID
-//req.body.longURL = new longURL from entry
-//<%= id %> = shortID in ejs files
-//req.cookies.user_id is the generated user id once they login successfully
-
 app.set("view engine", "ejs");
-// app.use(cookieParser());
-app.use(cookieSession({
-  name: "apple", // this is what the user will see when they inspect their cookies
-  keys: ["banana", "orange"], // re-encrypt under a certain time
-  // Cookie Options
-  maxAge: 24 * 60 * 60 * 1000 // 24 hours
-}))
 app.use(morgan("dev"));
 app.use(express.urlencoded({ extended: true }));
 
-//use EJS as templating engine
+app.use(cookieSession({
+  name: "apple",
+  keys: ["banana", "orange"], 
+  maxAge: 24 * 60 * 60 * 1000 
+}))
 
-
-//checks if email already exist in database if not will create new user in userDatabase hence an object
+//checks if email already exist in database if not will create new user in userDatabase as an object
 const getUserByEmail = (email) => {
   let result = null;
   for (let ids in userDatabase) {
@@ -47,12 +37,6 @@ const urlsForUser = (id) => {
    } return urlObj;
  };
 
-
-// //existing urlDatabase
-// const urlDatabase = {
-//   "b2xVn2": "http://www.lighthouselabs.ca",
-//   "9sm5xK": "http://www.google.com",
-// };
 const urlDatabase = {
   b6UTxQ: {
     longURL: "https://www.tsn.ca",
@@ -72,13 +56,13 @@ const urlDatabase = {
   },
 };
 
-//test users
+
 const userDatabase = {
-  // abc: {
-  //   id: 'abc',
-  //   email: 'a@a.com',
-  //   password: '1234'
-  // }
+  abc: {
+    id: 'abc',
+    email: 'a@a.com',
+    password: '1234'
+  }
 };
 
 //before routes, convert request body from Buffer into readable string
@@ -98,7 +82,6 @@ app.get("/hello", (req, res) => {
 
 //set route for urls, user can only access own urls
 app.get("/urls", (req, res) => {
-  // const userURL = urlsForUser(req.cookies.user_id);
 
   const templateVars = {
     urls: urlsForUser(req.session.user_id),
@@ -121,6 +104,7 @@ function generateRandomString() {
 
   return result;
 }
+
 //restrict access to newURL if not logged in and redirect to login page
 app.get("/urls/new", (req, res) => {
   const templateVars = {
@@ -205,22 +189,22 @@ app.get("/urls/:id", (req, res) => {
   res.render("urls_show", templateVars);
 });
 
-//post to redirect to longURL after creating new shortID and longURL
+//redirect to longURL after creating new shortID and longURL
 app.get("/u/:id", (req, res) => {
-
+//if a short ID that doesn't exist is entered into browser
   if (!urlDatabase[req.params.id]) {
     return res.status(404).send("The short ID doesn't exist, please try again or create a new one")
   }
   const longURL = urlDatabase[req.params.id].longURL;
-//if a short ID that doesn't exist is entered into browser
+
   res.redirect(longURL);
 });
 
-//setup login route
 app.get("/login", (req, res) => { 
   const templateVars = {
     user: userDatabase[req.session.user_id],
   };
+
 //if user logged in redirect to urls when trying to access /login
   if (req.session.user_id) {
   return res.redirect('urls');
@@ -232,21 +216,18 @@ app.get("/login", (req, res) => {
 app.post("/login", (req, res) => {
   const email = req.body.email; 
   const password = req.body.password;
-  //checks for email match
+
   let user = getUserByEmail(email)
   //checks for password match
-
-  // console.log(userDatabase[user.id].password)
-  // console.log(matchPassword)
   if ( !user|| !bcrypt.compareSync(password, user.password)) {
     return res.status(403).send('Error: Invalid email or password, sorry please try again!')
   }
-  // res.cookie('user_id', user.id)  
+
   req.session.user_id = userId
   res.redirect("/urls");
 });
 
-//setup register route
+
 app.get("/register", (req, res) => {
    const templateVars = {
     user: userDatabase[req.session.user_id],
@@ -259,7 +240,7 @@ app.get("/register", (req, res) => {
   res.render("register", templateVars);
 });
 
-//register process
+
 app.post("/register", (req, res) => {
   const userId = generateRandomString();
   const email = req.body.email;
@@ -279,16 +260,15 @@ app.post("/register", (req, res) => {
     return res.status(401).send("Error: Email already exists, please use a different email.");
   }
   userDatabase[userId] = { id: userId, email: email, password: hashedPassword };
-  //if not empty and email doesn't exist then create cookie for user 
-  // res.cookie("user_id", userId);
+
   req.session.user_id = userId;
   console.log(userDatabase);
 
   res.redirect("/urls");
 });
-//clears the cookie for person who's logged
+
 app.post("/logout", (req, res) => {
-  // res.clearCookie("user_id");
+
   req.session = null;
   res.redirect("/login");
 });
@@ -296,8 +276,3 @@ app.post("/logout", (req, res) => {
 app.listen(PORT, () => {
   console.log(`Example app listening on port ${PORT}!`);
 });
-
-// //404 page: use this function for every request when there's no match found
-//app.use((req, res) => {
-//   res.status(404).render('404');
-//});
