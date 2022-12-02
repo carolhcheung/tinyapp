@@ -13,14 +13,14 @@ app.use(cookieSession({
   name: "apple",
   keys: ["banana", "orange"], 
   maxAge: 24 * 60 * 60 * 1000 
-}))
+}));
 
 //checks if email already exist in database if not will create new user in userDatabase as an object
-const getUserByEmail = (email) => {
+const getUserByEmail = (email, database) => {
   let result = null;
-  for (let ids in userDatabase) {
-    if (email === userDatabase[ids].email) {
-      result = userDatabase[ids];
+  for (let ids in database) {
+    if (email === database[ids].email) {
+      result = database[ids];
     }
   }
   return result;
@@ -28,14 +28,28 @@ const getUserByEmail = (email) => {
 //filters urls for specific userid
 const urlsForUser = (id) => {
   let urlObj = {}
- 
-   for (let ids in urlDatabase){
- 
-     if (id === urlDatabase[ids].userID){
-       urlObj[ids] = urlDatabase[ids]
-     }
-   } return urlObj;
- };
+  
+  for (let ids in urlDatabase){
+    
+    if (id === urlDatabase[ids].userID){
+      urlObj[ids] = urlDatabase[ids]
+    }
+  } return urlObj;
+};
+
+//Generates random id for shortURL
+const characters =
+  "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789";
+function generateRandomString() {
+  let result = "";
+  const length = 6;
+  const charactersLength = characters.length;
+
+  for (let i = 0; i < length; i++) {
+    result += characters.charAt(Math.floor(Math.random() * charactersLength));
+  }
+  return result;
+}
 
 const urlDatabase = {
   b6UTxQ: {
@@ -45,17 +59,8 @@ const urlDatabase = {
   i3BoGr: {
     longURL: "https://www.google.ca",
     userID: "aJ48lW",
-  },
-  i3BoG1: {
-    longURL: "https://www.telus.com",
-    userID: "abc",
-  },
-  i3BoG2: {
-    longURL: "https://www.amazon.jp",
-    userID: "abc",
-  },
+  }
 };
-
 
 const userDatabase = {
   abc: {
@@ -64,9 +69,6 @@ const userDatabase = {
     password: '1234'
   }
 };
-
-//before routes, convert request body from Buffer into readable string
-app.use(express.urlencoded({ extended: true }));
 
 app.get("/", (req, res) => {
   res.send("Hello!");
@@ -90,20 +92,6 @@ app.get("/urls", (req, res) => {
   res.render("urls_index", templateVars);
 });
 
-//Generates random id for shortURL
-const characters =
-  "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789";
-function generateRandomString() {
-  let result = "";
-  const length = 6;
-  const charactersLength = characters.length;
-
-  for (let i = 0; i < length; i++) {
-    result += characters.charAt(Math.floor(Math.random() * charactersLength));
-  }
-
-  return result;
-}
 
 //restrict access to newURL if not logged in and redirect to login page
 app.get("/urls/new", (req, res) => {
@@ -217,7 +205,7 @@ app.post("/login", (req, res) => {
   const email = req.body.email; 
   const password = req.body.password;
 
-  let user = getUserByEmail(email)
+  let user = getUserByEmail(email, userDatabase)
   //checks for password match
   if ( !user|| !bcrypt.compareSync(password, user.password)) {
     return res.status(403).send('Error: Invalid email or password, sorry please try again!')
@@ -246,7 +234,7 @@ app.post("/register", (req, res) => {
   const email = req.body.email;
   const password = req.body.password;
   const hashedPassword = bcrypt.hashSync(password, 10);
-  const checkEmail = getUserByEmail(email);
+  const checkEmail = getUserByEmail(email, userDatabase);
   console.log(req.body); // Log the POST request body to the console
 
 //check for empty email or password for registration
