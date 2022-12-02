@@ -5,6 +5,8 @@ const cookieSession = require('cookie-session');
 const app = express();
 const PORT = 8080;
 
+const getUserByEmail = require("./helper.js");
+
 app.set("view engine", "ejs");
 app.use(morgan("dev"));
 app.use(express.urlencoded({ extended: true }));
@@ -15,16 +17,6 @@ app.use(cookieSession({
   maxAge: 24 * 60 * 60 * 1000 
 }));
 
-//checks if email already exist in database if not will create new user in userDatabase as an object
-const getUserByEmail = (email, database) => {
-  let result = null;
-  for (let ids in database) {
-    if (email === database[ids].email) {
-      result = database[ids];
-    }
-  }
-  return result;
-};
 //filters urls for specific userid
 const urlsForUser = (id) => {
   let urlObj = {}
@@ -207,11 +199,10 @@ app.post("/login", (req, res) => {
 
   let user = getUserByEmail(email, userDatabase)
   //checks for password match
-  if ( !user|| !bcrypt.compareSync(password, user.password)) {
+  if (!user|| !bcrypt.compareSync(password, user.password)) {
     return res.status(403).send('Error: Invalid email or password, sorry please try again!')
   }
-
-  req.session.user_id = userId
+  req.session.user_id = user.id
   res.redirect("/urls");
 });
 
