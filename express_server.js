@@ -5,7 +5,7 @@ const cookieSession = require('cookie-session');
 const app = express();
 const PORT = 8080;
 
-const getUserByEmail = require("./helper.js");
+const getUserByEmail = require("./helpers.js");
 
 app.set("view engine", "ejs");
 app.use(morgan("dev"));
